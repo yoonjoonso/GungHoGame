@@ -11,9 +11,15 @@ public class RobotMovement : MonoBehaviour
     public float verticalSpeed = .5f;
     public float jumpSpeed = 1;
     public float rotateAmount;
+    public GameObject punchBoxSpace;
+    PunchBox punchBox;
+    public Transform punchArea;
+
     Rigidbody2D rb;
     Collider2D coll;
     Animator animator;
+    bool canPunch = false;
+    bool canJump = false;
 
     private void Awake()
     {
@@ -24,60 +30,82 @@ public class RobotMovement : MonoBehaviour
 
     void Start ()
     {
-		
+        punchBox = punchBoxSpace.GetComponent<PunchBox>();
 	}
 	
 	void Update ()
     {
+        //This is to have a moving collider that's not childed
+        punchBoxSpace.transform.position = punchArea.position;
+
         Move(Input.GetAxis("Horizontal"));
 
-        if(Input.GetButtonDown("Jump"))
-        {
-            Jump();
-        }
+        //Check if I can punch or jump
+        canJump = !animator.GetCurrentAnimatorStateInfo(0).IsName("Jump");
+        canPunch = !animator.GetCurrentAnimatorStateInfo(0).IsName("Punch");
 
-        if(Input.GetButtonDown("Punch"))
+        if (Input.GetButtonDown("Punch"))
         {
             Punch();
+        }
+
+        //Only jump if I am grounded
+        if (Grounded())
+        {
+            if (Input.GetButtonDown("Jump"))
+            {
+                Jump();
+            }
         }
     }
 
     void Move(float direction)
     {
-        if (Mathf.Abs(direction) > .5)
+        if (Mathf.Abs(direction) > 0.1f)
         {
-            transform.eulerAngles = new Vector3(0, 180 - (direction * rotateAmount), 0);
+            animator.SetBool("IsWalking", true);
 
-            if (Grounded())
-            {
-                var clipinfos = animator.GetCurrentAnimatorClipInfo(0);
-                //if(clipinfos[0].clip.name != "Punch")
-                animator.Play("Walk");
-            }
+            int rounded = 0;
+            if (direction > 0)
+                rounded = 1;
+            if (direction < 0)
+                rounded = -1;
 
+            transform.eulerAngles = new Vector3(0, 180 - (rounded * rotateAmount), 0);
             direction *= verticalSpeed;
             Vector3 originalVel = rb.velocity;
             rb.velocity = new Vector3(direction, originalVel.y, 0);
+        }
+        else
+        {
+            animator.SetBool("IsWalking", false);
         }
     }
 
     void Jump()
     {
-        if (Grounded())
+        if (canJump)
         {
-            animator.Play("Jump");
+            animator.SetTrigger("Jumped");
             rb.AddForce(new Vector3(0, jumpSpeed, 0), ForceMode2D.Impulse);
+            canJump = false;
         }
     }
 
     void Punch()
     {
-        animator.Play("Punch");
+        if (canPunch)
+        {
+            animator.SetTrigger("Punched");
+            canPunch = false;
+            punchBox.Punch();
+        }
     }
 
+    //Raycasts downwards to check for grounding
     bool Grounded()
     {
-        RaycastHit2D rayhit = Physics2D.Raycast(new Vector3(0, coll.bounds.min.y, 0) , Vector3.down, .2f);
+        RaycastHit2D rayhit = Physics2D.Raycast(new Vector3(0, coll.bounds.min.y, 0) , Vector3.down, .1f);
 
         if(rayhit)
             return rayhit.transform.tag == "Floor";
