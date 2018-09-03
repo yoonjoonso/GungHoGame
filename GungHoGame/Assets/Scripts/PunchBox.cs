@@ -23,8 +23,8 @@ public class PunchBox : MonoBehaviour
             if (coll.tag == "Ball")
             {
                 Vector2 direction = coll.transform.position - transform.position;
-                if (direction.y < 0)
-                    direction.y = .3f;
+                if (direction.y < .5f)
+                    direction.y = .5f;
                 coll.GetComponent<Rigidbody2D>().AddForce(direction * punchPower);
             }
         }

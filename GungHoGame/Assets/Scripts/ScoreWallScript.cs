@@ -9,7 +9,7 @@ public class ScoreWallScript : MonoBehaviour
     {
         if(other.tag == "Ball")
         {
-            GameManagerScript.AddScore();
+            GameManagerScript.instance.AddScore();
             Destroy(other.gameObject);
         }
 
