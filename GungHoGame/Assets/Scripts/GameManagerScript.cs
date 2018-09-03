@@ -79,7 +79,7 @@ public class GameManagerScript : MonoBehaviour
 
     public static void ResetPlayerPosition()
     {
-        playerObject.transform.position = startPosition;
+        playerObject.GetComponentInChildren<RobotMovement>().transform.position = startPosition;
     }
 
     public void AddScore()
