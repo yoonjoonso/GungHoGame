@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -32,6 +33,7 @@ public class GameManagerScript : MonoBehaviour
     public BallManager ballmanager;
     public Transform startArea;
     public Text highScoreText;
+    public string fileName;
 
     static GameObject playerObject;
     static Vector2 startPosition;
@@ -51,6 +53,7 @@ public class GameManagerScript : MonoBehaviour
 
     void Start ()
     {
+        LoadFile();
         scoreBoard.SetActive(false);
         startScreen.SetActive(true);
     }
@@ -96,8 +99,26 @@ public class GameManagerScript : MonoBehaviour
         if (score > highscore)
             highscore = score;
         highScoreText.text = "High Score: " + highscore;
+        SaveFile();
         endScreen.SetActive(true);
         score = 0;
         scoreText.text = "Score: 0";
+    }
+
+    void SaveFile()
+    {
+        string fileStr = Application.persistentDataPath + fileName;
+        File.WriteAllText(fileStr, highscore.ToString());
+    }
+
+    void LoadFile()
+    {
+        string fileStr = Application.persistentDataPath + fileName;
+
+        if (File.Exists(fileStr))
+        {
+            string scoreStr = File.ReadAllText(fileStr);
+            highscore = int.Parse(scoreStr);
+        }
     }
 }

@@ -500,6 +500,7 @@ MonoBehaviour:
   ballmanager: {fileID: 1833224006}
   startArea: {fileID: 1862920091}
   highScoreText: {fileID: 2128103288}
+  fileName: save.txt
 --- !u!4 &431959837
 Transform:
   m_ObjectHideFlags: 0
