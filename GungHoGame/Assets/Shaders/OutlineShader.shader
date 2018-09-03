@@ -2,51 +2,106 @@
 {
 	Properties
 	{
-		_Color ("Color", Color) = (1,1,1,1)
-		_MainTex ("Albedo (RGB)", 2D) = "white" {}
-		_Glossiness ("Smoothness", Range(0,1)) = 0.5
-		_Metallic ("Metallic", Range(0,1)) = 0.0
+		_MainColor("Main Color", Color) = (1,1,1,1)
+		_TintColor("Tint Color", Color) = (1,1,1,.5)
+		_TintStrength("Tint Strength", Range(0,1)) = 1
+		_OutlineColor("Outline Color", Color) = (0,0,0,1)
+		_OutlineSize("Outline Size", Range(0,.5)) = .1
+		_MainTex("Main Texture", 2D) = "white" {}
 	}
+
 	SubShader
+	{
+		Pass
 		{
-		Tags { "RenderType"="Opaque" }
-		LOD 200
+			Tags{ "LightMode" = "ForwardBase" }
 
-		CGPROGRAM
-		// Physically based Standard lighting model, and enable shadows on all light types
-		#pragma surface surf Standard fullforwardshadows
+			CGPROGRAM
+			#pragma vertex vert
+			#pragma fragment frag
+			#include "UnityCG.cginc"
+			#include "UnityLightingCommon.cginc"
 
-		// Use shader model 3.0 target, to get nicer looking lighting
-		#pragma target 3.0
+			struct appdata
+			{
+				float4 vertex : POSITION;
+				float2 uv : TEXCOORD;
+				float3 normal : NORMAL;
+			};
 
-		sampler2D _MainTex;
+			struct v2f
+			{
+				float4 vertex : POSITION;
+				float2 uv : TEXCOORD;
+				float4 color : COLOR;
+			};
 
-		struct Input
-		{
-			float2 uv_MainTex;
-		};
+			v2f vert(appdata v)
+			{
+				v2f o;
+				o.vertex = UnityObjectToClipPos(v.vertex);
+				o.uv = v.uv;
+				float3 worldNormal = UnityObjectToWorldNormal(v.normal);
+				float R = max(0, dot(worldNormal, _WorldSpaceLightPos0.xyz));
+				o.color = R * _LightColor0;
+				o.color.rgb += ShadeSH9(float4(worldNormal, 1));
+				return o;
+			}
 
-		half _Glossiness;
-		half _Metallic;
-		fixed4 _Color;
+			sampler2D _MainTex;
+			float4 _TintColor;
+			float4 _MainColor;
+			float _TintStrength;
 
-		// Add instancing support for this shader. You need to check 'Enable Instancing' on materials that use the shader.
-		// See https://docs.unity3d.com/Manual/GPUInstancing.html for more information about instancing.
-		// #pragma instancing_options assumeuniformscaling
-		UNITY_INSTANCING_BUFFER_START(Props)
-			// put more per-instance properties here
-		UNITY_INSTANCING_BUFFER_END(Props)
-
-		void surf (Input IN, inout SurfaceOutputStandard o) {
-			// Albedo comes from a texture tinted by color
-			fixed4 c = tex2D (_MainTex, IN.uv_MainTex) * _Color;
-			o.Albedo = c.rgb;
-			// Metallic and smoothness come from slider variables
-			o.Metallic = _Metallic;
-			o.Smoothness = _Glossiness;
-			o.Alpha = c.a;
+			float4 frag(v2f i) : SV_Target
+			{
+				float4 color = tex2D(_MainTex, i.uv);
+				color *= i.color;
+				color *= _MainColor + (_TintColor * _TintStrength);
+				return color;
+			}
+			ENDCG
 		}
-		ENDCG
+
+		Pass
+		{
+			Cull Front
+
+			CGPROGRAM
+			#pragma vertex vert
+			#pragma fragment frag
+			#include "UnityCG.cginc"
+
+			struct appdata
+			{
+				float4 vertex : POSITION;
+				float3 normal : NORMAL;
+			};
+
+			struct v2f
+			{
+				float4 vertex : POSITION;
+				float4 color : COLOR;
+			};
+
+			uniform float4 _OutlineColor;
+			uniform float _OutlineSize;
+
+			v2f vert(appdata v)
+			{
+				v.vertex.xyz += _OutlineSize * normalize(v.vertex.xyz);
+				v2f o;
+				o.vertex = UnityObjectToClipPos(v.vertex);
+				o.color = _OutlineColor;
+				return o;
+			}
+
+			float4 frag(v2f i) :COLOR
+			{
+				return i.color;
+			}
+			ENDCG
+		}
 	}
-	FallBack "Diffuse"
+	CustomEditor "ShaderViewer"
 }

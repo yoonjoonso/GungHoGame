@@ -9,7 +9,7 @@ public class GameManagerScript : MonoBehaviour
     public GameObject scoreBoard;
     public GameObject endScreen;
     public GameObject playerPrefab;
-    public GameObject ballPrefabs;
+    public BallManager ballmanager;
     public Transform startArea;
 
     static GameObject playerObject;
@@ -38,7 +38,7 @@ public class GameManagerScript : MonoBehaviour
         if (state == GameState.menu && Input.GetButtonDown("Punch")) //punch is space for now in the input
         {
             state = GameState.game;
-            StartCoroutine(StartGame());
+            StartGame();
         }
 	}
 
@@ -53,9 +53,14 @@ public class GameManagerScript : MonoBehaviour
         scoreText.text = "Score: " + score;
     }
 
-    IEnumerator StartGame()
+    void StartGame()
     {
         playerObject = Instantiate(playerPrefab, startPosition, Quaternion.identity);
-        yield return 0;
+
+    }
+
+    void StopGame()
+    {
+        Destroy(playerObject);
     }
 }

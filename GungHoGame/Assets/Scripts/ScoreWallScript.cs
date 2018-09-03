@@ -12,5 +12,11 @@ public class ScoreWallScript : MonoBehaviour
             GameManagerScript.AddScore();
             Destroy(other.gameObject);
         }
+
+        //failsafe in case player gets out
+        if(other.tag == "Player")
+        {
+            GameManagerScript.ResetPlayerPosition();
+        }
     }
 }
